@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hung Bui — Fullstack Developer</title>
+  <meta name="description" content="Backend Developer building scalable web applications, AI-powered systems and cloud infrastructure with Laravel, Python, FastAPI and AWS." />
+
+  <!-- Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- TailwindCSS (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    // Tailwind theme tokens
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            ink:      '#09090B',
+            paper:    '#FAFAFA',
+            muted:    '#A1A1AA',
+            brand:    '#3B82F6',
+            purple:   '#8B5CF6',
+            grass:    '#22C55E',
+          },
+          maxWidth: { '7xl': '80rem' },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ============================================================
+       BASE
+       ============================================================ */
+    :root {
+      --bg: #09090B;
+      --card: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hi: rgba(255, 255, 255, 0.18);
+      --brand: #3B82F6;
+      --purple: #8B5CF6;
+      --grass: #22C55E;
+      --text: #FAFAFA;
+      --muted: #A1A1AA;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+    }
+
+    /* Selection */
+    ::selection { background: rgba(139, 92, 246, 0.35); color: #fff; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); border: 2px solid transparent; background-clip: padding-box; }
+
+    /* ============================================================
+       ATMOSPHERE — animated background blobs + grain
+       ============================================================ */
+    .bg-atmosphere {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.5;
+      will-change: transform;
+    }
+    .blob-1 { width: 620px; height: 620px; top: -180px; left: -140px; background: radial-gradient(circle at 30% 30%, #3B82F6, transparent 70%); animation: float1 22s ease-in-out infinite; }
+    .blob-2 { width: 560px; height: 560px; top: 8%; right: -160px; background: radial-gradient(circle at 30% 30%, #8B5CF6, transparent 70%); animation: float2 26s ease-in-out infinite; }
+    .blob-3 { width: 520px; height: 520px; bottom: -160px; left: 24%; background: radial-gradient(circle at 30% 30%, #6366F1, transparent 70%); opacity: 0.35; animation: float3 30s ease-in-out infinite; }
+
+    /* Subtle grid overlay */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 90%);
+    }
+
+    @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px, 40px) scale(1.08); } }
+    @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } }
+    @keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px, -40px) scale(1.06); } }
+
+    /* ============================================================
+       GLASS CARD
+       ============================================================ */
+    .glass {
+      position: relative;
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
+      transition: transform .45s cubic-bezier(.22,1,.36,1), border-color .45s ease, box-shadow .45s ease;
+    }
+    /* Glass shine sweep on hover */
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.06) 48%, transparent 62%);
+      background-size: 250% 250%;
+      background-position: 120% 0;
+      opacity: 0;
+      transition: opacity .4s ease;
+      pointer-events: none;
+    }
+    .glass-hover:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: var(--border-hi);
+      box-shadow: 0 30px 60px -24px rgba(0,0,0,0.7), 0 0 40px -8px rgba(59,130,246,0.18);
+    }
+    .glass-hover:hover::before {
+      opacity: 1;
+      animation: shine 1.1s ease forwards;
+    }
+    @keyframes shine { from { background-position: 120% 0; } to { background-position: -60% 0; } }
+
+    /* ============================================================
+       TEXT & GRADIENT UTILITIES
+       ============================================================ */
+    .text-gradient {
+      background: linear-gradient(100deg, #FAFAFA 0%, #93C5FD 45%, #A78BFA 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .text-gradient-bp {
+      background: linear-gradient(100deg, #60A5FA, #A78BFA);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ============================================================
+       AVATAR RING + PARTICLES
+       ============================================================ */
+    .avatar-ring {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #3B82F6, #8B5CF6, #22C55E, #3B82F6);
+      filter: blur(2px);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+      animation: spin 9s linear infinite;
+      opacity: .9;
+    }
+    .avatar-glow {
+      position: absolute;
+      inset: -40px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,.35), transparent 65%);
+      filter: blur(24px);
+      animation: pulse 4.5s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
+
+    .particle {
+      position: absolute;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #A78BFA;
+      box-shadow: 0 0 10px 2px rgba(167,139,250,.7);
+    }
+    .p1 { top: 6%;  left: 14%; animation: orbit 7s ease-in-out infinite; }
+    .p2 { bottom: 10%; right: 12%; background:#60A5FA; box-shadow:0 0 10px 2px rgba(96,165,250,.7); animation: orbit 9s ease-in-out infinite reverse; }
+    .p3 { top: 42%; right: -2%; background:#34D399; box-shadow:0 0 10px 2px rgba(52,211,153,.7); animation: orbit 11s ease-in-out infinite; }
+    @keyframes orbit { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-10px,-14px); } }
+
+    /* ============================================================
+       STAT SPARKLINE
+       ============================================================ */
+    .spark path { stroke-dasharray: 300; stroke-dashoffset: 300; animation: draw 2.4s ease forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    /* ============================================================
+       PILLS
+       ============================================================ */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .42rem .8rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 500;
+      color: #E4E4E7;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;
+    }
+    .pill:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.22);
+      box-shadow: 0 0 18px -4px var(--_glow, rgba(59,130,246,.5));
+    }
+    .tag {
+      font-size: .68rem;
+      font-weight: 500;
+      padding: .18rem .55rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* ============================================================
+       FADE-UP REVEAL (CSS driven, JS only toggles .in)
+       ============================================================ */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* Contribution cells */
+    .cell { width: 100%; aspect-ratio: 1/1; border-radius: 3px; background: rgba(255,255,255,0.05); }
+    .lvl1 { background: rgba(34,197,94,.28); }
+    .lvl2 { background: rgba(34,197,94,.5); }
+    .lvl3 { background: rgba(34,197,94,.72); }
+    .lvl4 { background: rgba(34,197,94,.95); box-shadow: 0 0 6px rgba(34,197,94,.5); }
+
+    /* Nav link underline */
+    .navlink { position: relative; }
+    .navlink::after {
+      content: ""; position: absolute; left: 0; bottom: -6px; height: 2px; width: 0;
+      background: linear-gradient(90deg, var(--brand), var(--purple));
+      border-radius: 2px; transition: width .3s ease;
+    }
+    .navlink:hover::after, .navlink.active::after { width: 100%; }
+
+    /* Paper plane float */
+    .float-slow { animation: float3 8s ease-in-out infinite; }
+
+    /* ============================================================
+       REDUCED MOTION
+       ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .reveal { opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <!-- ============================================================
+       BACKGROUND ATMOSPHERE
+       ============================================================ -->
+  <div class="bg-atmosphere" aria-hidden="true">
+    <div class="blob blob-1" data-parallax="0.02"></div>
+    <div class="blob blob-2" data-parallax="0.035"></div>
+    <div class="blob blob-3" data-parallax="0.025"></div>
+  </div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       NAVBAR
+       ============================================================ -->
+  <header class="sticky top-0 z-50 pt-4">
+   <div class="max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="glass px-4 sm:px-6 py-3 flex items-center justify-between rounded-3xl">
+      <!-- Logo -->
+      <a href="#home" class="flex items-center gap-2.5 group">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-purple text-white shadow-lg shadow-brand/30 group-hover:scale-105 transition-transform">
+          <i data-lucide="code-xml" class="w-5 h-5"></i>
+        </span>
+        <span class="font-bold text-[15px] tracking-tight">Hung <span class="text-gradient-bp">Bui</span></span>
+      </a>
+
+      <!-- Desktop menu -->
+      <ul class="hidden lg:flex items-center gap-8 text-sm text-muted font-medium">
+        <li><a href="#home" class="navlink active hover:text-paper transition-colors">Home</a></li>
+        <li><a href="#about" class="navlink hover:text-paper transition-colors">About</a></li>
+        <li><a href="#projects" class="navlink hover:text-paper transition-colors">Projects</a></li>
+        <li><a href="#experience" class="navlink hover:text-paper transition-colors">Experience</a></li>
+        <li><a href="#blog" class="navlink hover:text-paper transition-colors">Blog</a></li>
+        <li><a href="#contact" class="navlink hover:text-paper transition-colors">Contact</a></li>
+      </ul>
+
+      <!-- Right actions -->
+      <div class="flex items-center gap-2">
+        <a href="#" aria-label="GitHub" class="hidden sm:grid place-items-center w-9 h-9 rounded-xl border border-white/10 text-muted hover:text-paper hover:border-white/25 transition-colors">
+          <i data-lucide="github" class="w-[18px] h-[18px]"></i>
+        </a>
+        <a href="#" aria-label="LinkedIn" class="hidden sm:grid place-items-center w-9 h-9 rounded-xl border border-white/10 text-muted hover:text-brand hover:border-white/25 transition-colors">
+          <i data-lucide="linkedin" class="w-[18px] h-[18px]"></i>
+        </a>
+        <button id="themeBtn" aria-label="Toggle theme" class="grid place-items-center w-9 h-9 rounded-xl border border-white/10 text-muted hover:text-paper hover:border-white/25 transition-colors">
+          <i data-lucide="moon-star" class="w-[18px] h-[18px]"></i>
+        </button>
+        <a href="#" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand to-purple shadow-lg shadow-purple/25 hover:shadow-purple/40 hover:-translate-y-0.5 transition-all">
+          <i data-lucide="download" class="w-4 h-4"></i> Download CV
+        </a>
+        <!-- Hamburger -->
+        <button id="menuBtn" aria-label="Open menu" class="lg:hidden grid place-items-center w-9 h-9 rounded-xl border border-white/10 text-paper">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="lg:hidden hidden mt-2 glass rounded-2xl p-3">
+      <ul class="flex flex-col text-sm text-muted font-medium">
+        <li><a href="#home"       class="block px-4 py-2.5 rounded-xl hover:bg-white/5 hover:text-paper">Home</a></li>
+        <li><a href="#about"      class="block px-4 py-2.5 rounded-xl hover:bg-white/5 hover:text-paper">About</a></li>
+        <li><a href="#projects"   class="block px-4 py-2.5 rounded-xl hover:bg-white/5 hover:text-paper">Projects</a></li>
+        <li><a href="#experience" class="block px-4 py-2.5 rounded-xl hover:bg-white/5 hover:text-paper">Experience</a></li>
+        <li><a href="#blog"       class="block px-4 py-2.5 rounded-xl hover:bg-white/5 hover:text-paper">Blog</a></li>
+        <li><a href="#contact"    class="block px-4 py-2.5 rounded-xl hover:bg-white/5 hover:text-paper">Contact</a></li>
+      </ul>
+      <a href="#" class="mt-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand to-purple">
+        <i data-lucide="download" class="w-4 h-4"></i> Download CV
+      </a>
+    </div>
+   </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN — BENTO GRID
+       ============================================================ -->
+  <main class="max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <div class="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-5">
+
+      <!-- ============================ HERO ============================ -->
+      <section id="home" class="md:col-span-6 lg:col-span-5 glass glass-hover reveal p-6 sm:p-7 overflow-hidden">
+        <span class="inline-flex items-center gap-2 text-sm font-medium text-muted border border-white/10 rounded-full px-3 py-1 bg-white/5">
+          <i data-lucide="hand" class="w-4 h-4 text-amber-300"></i> Hello, I'm
+        </span>
+
+        <h1 class="mt-4 text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.02]">
+          Hung <span class="text-gradient-bp">Bui</span>
+        </h1>
+
+        <p class="mt-2 text-lg font-semibold text-paper/90">Fullstack Developer</p>
+
+        <p class="mt-3 max-w-md text-[15px] leading-relaxed text-muted">
+          Building scalable web applications, AI-powered systems, cloud infrastructure and modern
+          backend architecture that solve real-world problems.
+        </p>
+
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+          <a href="#contact" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand to-purple shadow-lg shadow-purple/25 hover:-translate-y-0.5 hover:shadow-purple/40 transition-all">
+            Let's Connect <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+          </a>
+          <a href="#projects" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-paper border border-white/12 bg-white/5 hover:bg-white/10 hover:border-white/25 transition-all">
+            View Projects <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+          <span class="inline-flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-brand"></i> Vietnam</span>
+          <span class="inline-flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4 text-purple"></i> hungbuiqb16@gmail.com</span>
+          <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-grass shadow-[0_0_8px] shadow-grass"></span> Available for work</span>
+        </div>
+      </section>
+
+      <!-- ============================ AVATAR / PHOTO ============================ -->
+      <section class="md:col-span-3 lg:col-span-4 glass glass-hover reveal p-5 flex flex-col">
+        <div class="relative mx-auto w-full aspect-[16/10] rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-brand/20 via-purple/15 to-transparent">
+          <div class="avatar-glow" style="inset:-20px;"></div>
+          <div class="absolute inset-0 grid place-items-center">
+            <div class="relative w-44 h-44">
+              <div class="avatar-ring"></div>
+              <div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div>
+              <div class="relative w-44 h-44 rounded-full overflow-hidden border border-white/15 bg-gradient-to-br from-brand/30 to-purple/30">
+                <img src="avt.jpg" alt="Hung Bui" class="w-full h-full object-cover" />
+              </div>
+            </div>
+          </div>
+          <span class="absolute left-3 bottom-3 inline-flex items-center gap-1.5 text-xs font-medium text-grass border border-grass/25 bg-ink/70 backdrop-blur rounded-full px-2.5 py-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-grass"></span> Available
+          </span>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl border border-white/8 bg-white/[0.03] px-2 py-2 flex items-center justify-center gap-1.5">
+            <i data-lucide="server" class="w-4 h-4 text-brand shrink-0"></i>
+            <p class="text-[11px] leading-tight text-muted text-left">Backend Developer</p>
+          </div>
+          <div class="rounded-xl border border-white/8 bg-white/[0.03] px-2 py-2 flex items-center justify-center gap-1.5">
+            <i data-lucide="cloud" class="w-4 h-4 text-purple shrink-0"></i>
+            <p class="text-[11px] leading-tight text-muted text-left">Cloud Engineer</p>
+          </div>
+          <div class="rounded-xl border border-white/8 bg-white/[0.03] px-2 py-2 flex items-center justify-center gap-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4 text-grass shrink-0"></i>
+            <p class="text-[11px] leading-tight text-muted text-left">AI Enthusiast</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ ABOUT ============================ -->
+      <section id="about" class="md:col-span-3 lg:col-span-3 glass glass-hover reveal p-6 flex flex-col">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="grid place-items-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-brand"><i data-lucide="user-round" class="w-5 h-5"></i></span>
+          <h2 class="text-lg font-bold">About Me</h2>
+        </div>
+
+        <p class="text-[13px] leading-relaxed text-muted">
+          Backend developer with 6+ years of experience in building robust web applications and distributed systems.
+          Passionate about AI, Cloud and Clean Code.
+        </p>
+
+        <div class="mt-4 pt-4 border-t border-white/8 grid grid-cols-2 gap-x-3 gap-y-3 text-[13px]">
+          <div class="flex items-start gap-2 text-muted"><i data-lucide="briefcase" class="w-4 h-4 text-brand mt-0.5"></i><span>Experience<br/><span class="text-paper font-semibold">6+ Years</span></span></div>
+          <div class="flex items-start gap-2 text-muted"><i data-lucide="map-pin" class="w-4 h-4 text-purple mt-0.5"></i><span>Location<br/><span class="text-paper font-semibold">Da Nang, Vietnam</span></span></div>
+          <div class="flex items-start gap-2 text-muted"><i data-lucide="folder-check" class="w-4 h-4 text-grass mt-0.5"></i><span>Projects<br/><span class="text-paper font-semibold">25+ Completed</span></span></div>
+          <div class="flex items-start gap-2 text-muted"><i data-lucide="mail" class="w-4 h-4 text-brand mt-0.5"></i><span>Email<br/><span class="text-paper font-semibold break-all">hungbuiqb16@gmail.com</span></span></div>
+        </div>
+      </section>
+
+      <!-- ============================ STATISTICS ============================ -->
+      <!-- Experience -->
+      <div class="md:col-span-3 lg:col-span-3 glass glass-hover reveal p-4 flex items-center gap-3">
+        <span class="grid place-items-center w-11 h-11 rounded-xl bg-brand/15 border border-brand/25 text-brand shrink-0"><i data-lucide="briefcase" class="w-5 h-5"></i></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-2xl font-extrabold tracking-tight">6+</p>
+          <p class="text-sm text-muted">Years Experience</p>
+        </div>
+        <svg class="spark w-16 h-8 shrink-0" viewBox="0 0 120 32" fill="none"><path d="M0 24 L20 18 L40 22 L60 10 L80 16 L100 6 L120 12" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <!-- Projects -->
+      <div class="md:col-span-3 lg:col-span-3 glass glass-hover reveal p-4 flex items-center gap-3">
+        <span class="grid place-items-center w-11 h-11 rounded-xl bg-grass/15 border border-grass/25 text-grass shrink-0"><i data-lucide="rocket" class="w-5 h-5"></i></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-2xl font-extrabold tracking-tight">25+</p>
+          <p class="text-sm text-muted">Projects Completed</p>
+        </div>
+        <svg class="spark w-16 h-8 shrink-0" viewBox="0 0 120 32" fill="none"><path d="M0 26 L20 20 L40 24 L60 14 L80 18 L100 8 L120 4" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <!-- Technologies -->
+      <div class="md:col-span-3 lg:col-span-3 glass glass-hover reveal p-4 flex items-center gap-3">
+        <span class="grid place-items-center w-11 h-11 rounded-xl bg-amber-400/15 border border-amber-400/25 text-amber-300 shrink-0"><i data-lucide="star" class="w-5 h-5"></i></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-2xl font-extrabold tracking-tight">15+</p>
+          <p class="text-sm text-muted">Technologies</p>
+        </div>
+        <svg class="spark w-16 h-8 shrink-0" viewBox="0 0 120 32" fill="none"><path d="M0 20 L20 24 L40 16 L60 22 L80 12 L100 18 L120 10" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <!-- Github Contributions -->
+      <div class="md:col-span-3 lg:col-span-3 glass glass-hover reveal p-4 flex items-center gap-3">
+        <span class="grid place-items-center w-11 h-11 rounded-xl bg-brand/15 border border-brand/25 text-brand shrink-0"><i data-lucide="code-xml" class="w-5 h-5"></i></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-2xl font-extrabold tracking-tight">2K+</p>
+          <p class="text-sm text-muted">GitHub Contributions</p>
+        </div>
+        <svg class="spark w-16 h-8 shrink-0" viewBox="0 0 120 32" fill="none"><path d="M0 24 L20 20 L40 22 L60 16 L80 18 L100 10 L120 6" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <!-- ============================ FEATURED PROJECTS ============================ -->
+      <section id="projects" class="md:col-span-6 lg:col-span-6 glass glass-hover reveal p-6 sm:p-7">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="folder-git-2" class="w-5 h-5 text-brand"></i>
+            <h2 class="text-lg font-bold">Featured Projects</h2>
+          </div>
+          <a href="#" class="text-sm text-brand hover:text-purple inline-flex items-center gap-1 transition-colors">View all <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Project: Ekiten AI FAQ -->
+          <article class="group relative flex flex-col p-4 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="shrink-0 grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-brand/25 to-purple/25 border border-white/10 text-brand"><i data-lucide="message-square-more" class="w-5 h-5"></i></span>
+              <span class="tag !text-purple !border-purple/30 !bg-purple/10">Featured</span>
+            </div>
+            <h3 class="font-semibold text-paper text-sm">Ekiten AI FAQ</h3>
+            <p class="mt-1 text-[12px] text-muted leading-snug">AI-powered FAQ system with RAG, FastAPI, PostgreSQL, pgvector, and AWS ECS.</p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">PostgreSQL</span><span class="tag">AWS</span>
+            </div>
+            <a href="#" aria-label="Open project" class="absolute top-3 right-3 grid place-items-center w-7 h-7 rounded-lg border border-white/10 text-muted group-hover:text-paper group-hover:border-white/25 transition-colors"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>
+          </article>
+
+          <!-- Project: AI Story -->
+          <article class="group relative flex flex-col p-4 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="shrink-0 grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-grass/25 to-brand/25 border border-white/10 text-grass"><i data-lucide="book-open-text" class="w-5 h-5"></i></span>
+              <span class="tag !text-grass !border-grass/30 !bg-grass/10">Featured</span>
+            </div>
+            <h3 class="font-semibold text-paper text-sm">AI Story</h3>
+            <p class="mt-1 text-[12px] text-muted leading-snug">AI story generation platform for Vietnamese folktales with beautiful illustrations.</p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              <span class="tag">Python</span><span class="tag">React</span><span class="tag">FastAPI</span><span class="tag">AWS S3</span>
+            </div>
+            <a href="#" aria-label="Open project" class="absolute top-3 right-3 grid place-items-center w-7 h-7 rounded-lg border border-white/10 text-muted group-hover:text-paper group-hover:border-white/25 transition-colors"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>
+          </article>
+
+          <!-- Project: Video Transcriber -->
+          <article class="group relative flex flex-col p-4 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="shrink-0 grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple/25 to-brand/25 border border-white/10 text-purple"><i data-lucide="audio-lines" class="w-5 h-5"></i></span>
+            </div>
+            <h3 class="font-semibold text-paper text-sm">Video Transcriber</h3>
+            <p class="mt-1 text-[12px] text-muted leading-snug">Transcribe video/audio to text with speaker diarization and translation support.</p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              <span class="tag">Python</span><span class="tag">Whisper</span><span class="tag">FastAPI</span><span class="tag">Docker</span>
+            </div>
+            <a href="#" aria-label="Open project" class="absolute top-3 right-3 grid place-items-center w-7 h-7 rounded-lg border border-white/10 text-muted group-hover:text-paper group-hover:border-white/25 transition-colors"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============================ TECH STACK ============================ -->
+      <section class="md:col-span-6 lg:col-span-6 glass glass-hover reveal p-6 sm:p-7">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="layers" class="w-5 h-5 text-purple"></i>
+            <h2 class="text-lg font-bold">Tech Stack</h2>
+          </div>
+          <a href="#" class="text-sm text-brand hover:text-purple inline-flex items-center gap-1 transition-colors">View all <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+        </div>
+
+        <!-- Backend -->
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted/70 mb-2.5">Backend</p>
+        <div class="flex flex-wrap gap-2 mb-5">
+          <span class="pill" style="--_glow:rgba(99,102,241,.5)"><i data-lucide="server" class="w-4 h-4 text-indigo-400"></i>PHP</span>
+          <span class="pill" style="--_glow:rgba(239,68,68,.5)"><i data-lucide="flame" class="w-4 h-4 text-red-400"></i>Laravel</span>
+          <span class="pill" style="--_glow:rgba(250,204,21,.5)"><i data-lucide="braces" class="w-4 h-4 text-yellow-300"></i>Python</span>
+          <span class="pill" style="--_glow:rgba(45,212,191,.5)"><i data-lucide="zap" class="w-4 h-4 text-teal-300"></i>FastAPI</span>
+          <span class="pill" style="--_glow:rgba(139,92,246,.5)"><i data-lucide="webhook" class="w-4 h-4 text-purple"></i>REST API</span>
+        </div>
+
+        <!-- Frontend -->
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted/70 mb-2.5">Frontend</p>
+        <div class="flex flex-wrap gap-2 mb-5">
+          <span class="pill" style="--_glow:rgba(56,189,248,.5)"><i data-lucide="atom" class="w-4 h-4 text-sky-400"></i>React</span>
+          <span class="pill" style="--_glow:rgba(59,130,246,.5)"><i data-lucide="file-type-2" class="w-4 h-4 text-brand"></i>TypeScript</span>
+          <span class="pill" style="--_glow:rgba(250,204,21,.5)"><i data-lucide="file-code-2" class="w-4 h-4 text-yellow-300"></i>JavaScript</span>
+          <span class="pill" style="--_glow:rgba(45,212,191,.5)"><i data-lucide="wind" class="w-4 h-4 text-teal-300"></i>TailwindCSS</span>
+          <span class="pill" style="--_glow:rgba(139,92,246,.5)"><i data-lucide="layout-grid" class="w-4 h-4 text-purple"></i>Bootstrap</span>
+        </div>
+
+        <!-- Cloud & DevOps -->
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted/70 mb-2.5">Cloud &amp; DevOps</p>
+        <div class="flex flex-wrap gap-2 mb-5">
+          <span class="pill" style="--_glow:rgba(251,146,60,.5)"><i data-lucide="cloud" class="w-4 h-4 text-orange-400"></i>AWS</span>
+          <span class="pill" style="--_glow:rgba(139,92,246,.5)"><i data-lucide="boxes" class="w-4 h-4 text-purple"></i>Terraform</span>
+          <span class="pill" style="--_glow:rgba(56,189,248,.5)"><i data-lucide="container" class="w-4 h-4 text-sky-400"></i>Docker</span>
+          <span class="pill" style="--_glow:rgba(148,163,184,.5)"><i data-lucide="git-branch" class="w-4 h-4 text-slate-300"></i>GitHub Actions</span>
+          <span class="pill" style="--_glow:rgba(34,197,94,.5)"><i data-lucide="workflow" class="w-4 h-4 text-grass"></i>GitLab CI/CD</span>
+          <span class="pill" style="--_glow:rgba(34,197,94,.5)"><i data-lucide="globe" class="w-4 h-4 text-emerald-400"></i>Nginx</span>
+        </div>
+
+        <!-- Database -->
+        <p class="text-xs font-semibold uppercase tracking-wider text-muted/70 mb-2.5">Database</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="pill" style="--_glow:rgba(59,130,246,.5)"><i data-lucide="database" class="w-4 h-4 text-brand"></i>PostgreSQL</span>
+          <span class="pill" style="--_glow:rgba(251,146,60,.5)"><i data-lucide="database" class="w-4 h-4 text-orange-400"></i>MySQL</span>
+          <span class="pill" style="--_glow:rgba(239,68,68,.5)"><i data-lucide="database-zap" class="w-4 h-4 text-red-400"></i>Redis</span>
+        </div>
+      </section>
+
+      <!-- ============================ EXPERIENCE (timeline) ============================ -->
+      <section id="experience" class="md:col-span-6 lg:col-span-3 glass glass-hover reveal p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="milestone" class="w-5 h-5 text-brand"></i>
+            <h2 class="text-lg font-bold">Experience</h2>
+          </div>
+          <a href="#" class="text-sm text-brand hover:text-purple inline-flex items-center gap-1 transition-colors">View all <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+        </div>
+
+        <ol class="relative border-l border-white/10 ml-1 space-y-5">
+          <!-- Senior Backend Developer -->
+          <li class="pl-6">
+            <span class="absolute -left-[7px] mt-1 w-3.5 h-3.5 rounded-full bg-brand ring-4 ring-brand/20"></span>
+            <p class="text-xs text-muted">2020 — Present</p>
+            <h3 class="font-semibold text-paper mt-0.5">Fullstack Developer</h3>
+            <p class="text-sm text-brand">GMO-Z.Com Tech VN NTA</p>
+            <p class="mt-1.5 text-[13px] text-muted leading-snug">Developing an AI FAQ system, chat widget and internal tools with clean, distributed architecture.</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span class="tag">Laravel</span><span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">AWS</span><span class="tag">PostgreSQL</span>
+            </div>
+          </li>
+          <!-- Backend Developer -->
+          <li class="pl-6">
+            <span class="absolute -left-[7px] mt-1 w-3.5 h-3.5 rounded-full bg-purple ring-4 ring-purple/20"></span>
+            <p class="text-xs text-muted">2020 — 2020</p>
+            <h3 class="font-semibold text-paper mt-0.5">Backend Developer</h3>
+            <p class="text-sm text-purple">NCC Asia</p>
+            <p class="mt-1.5 text-[13px] text-muted leading-snug">Built and maintained multiple SaaS products serving thousands of daily users.</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span class="tag">Laravel</span><span class="tag">Vue</span><span class="tag">MySQL</span>
+            </div>
+          </li>
+          <!-- Freelancer -->
+          <li class="pl-6">
+            <span class="absolute -left-[7px] mt-1 w-3.5 h-3.5 rounded-full bg-grass ring-4 ring-grass/20"></span>
+            <p class="text-xs text-muted">2017 — 2019</p>
+            <h3 class="font-semibold text-paper mt-0.5">Web Developer — Freelancer</h3>
+            <p class="text-sm text-grass">Independent</p>
+            <p class="mt-1.5 text-[13px] text-muted leading-snug">Delivered custom websites and web apps for clients across various industries.</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span class="tag">PHP</span><span class="tag">Laravel</span><span class="tag">WordPress</span>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ============================ GITHUB ACTIVITY ============================ -->
+      <section id="blog" class="md:col-span-6 lg:col-span-3 glass glass-hover reveal p-6">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="github" class="w-5 h-5 text-paper"></i>
+            <h2 class="text-lg font-bold">GitHub Activity</h2>
+          </div>
+          <a href="#" class="text-sm text-brand hover:text-purple inline-flex items-center gap-1 transition-colors">View GitHub <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+        </div>
+
+        <!-- Month labels -->
+        <div class="grid grid-cols-12 gap-1 text-[9px] text-muted/60 mb-1.5 pl-1">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+          <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+        </div>
+        <!-- Contribution graph (generated by JS) -->
+        <div id="contribGraph" class="grid grid-cols-[repeat(26,minmax(0,1fr))] grid-rows-7 gap-1"></div>
+
+        <!-- Stats -->
+        <div class="mt-6 grid grid-cols-2 gap-4 pt-5 border-t border-white/8">
+          <div><p class="text-2xl font-extrabold">2,142</p><p class="text-xs text-muted">Contributions</p></div>
+          <div><p class="text-2xl font-extrabold">21</p><p class="text-xs text-muted">Repositories</p></div>
+          <div><p class="text-2xl font-extrabold">126</p><p class="text-xs text-muted">Stars</p></div>
+          <div><p class="text-2xl font-extrabold">43</p><p class="text-xs text-muted">Pull Requests</p></div>
+        </div>
+      </section>
+
+      <!-- ============================ SERVICES ============================ -->
+      <section class="md:col-span-6 lg:col-span-3 glass glass-hover reveal p-6">
+        <div class="flex items-center gap-2.5 mb-5">
+          <i data-lucide="zap" class="w-5 h-5 text-purple"></i>
+          <h2 class="text-lg font-bold">Services</h2>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- Backend Development -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-brand/15 border border-brand/25 text-brand"><i data-lucide="server-cog" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">Backend Development</p>
+              <p class="text-xs text-muted truncate">Laravel, FastAPI, RESTful API, Microservices</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+          <!-- AI Automation -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-purple/15 border border-purple/25 text-purple"><i data-lucide="bot" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">AI &amp; Automation</p>
+              <p class="text-xs text-muted truncate">RAG, NLP, Chatbot, Workflow Automation</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+          <!-- Cloud & DevOps -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-sky-400/15 border border-sky-400/25 text-sky-400"><i data-lucide="cloud-cog" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">Cloud &amp; DevOps</p>
+              <p class="text-xs text-muted truncate">AWS, Terraform, Docker, CI/CD Pipeline</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+          <!-- System Design -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-grass/15 border border-grass/25 text-grass"><i data-lucide="network" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">System Design</p>
+              <p class="text-xs text-muted truncate">Scalable Architecture, Performance Optimization</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+        </div>
+      </section>
+
+      <!-- ============================ LET'S CONNECT ============================ -->
+      <section id="contact" class="md:col-span-6 lg:col-span-3 glass glass-hover reveal p-6">
+        <div class="flex items-center gap-2.5 mb-2">
+          <i data-lucide="send" class="w-5 h-5 text-brand"></i>
+          <h2 class="text-lg font-bold">Let's Connect</h2>
+        </div>
+        <p class="text-[13px] text-muted leading-relaxed mb-5">I'm always open to discussing new opportunities and exciting projects.</p>
+
+        <div class="space-y-2.5">
+          <!-- GitHub -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-white/5 border border-white/10 text-paper"><i data-lucide="github" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">GitHub</p>
+              <p class="text-xs text-muted truncate">github.com/hungbuiqb16</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+          <!-- GitLab -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-orange-400/15 border border-orange-400/25 text-orange-400"><i data-lucide="git-merge" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">GitLab</p>
+              <p class="text-xs text-muted truncate">gitlab.com/hungbuiqb16</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+          <!-- LinkedIn -->
+          <a href="#" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-brand/15 border border-brand/25 text-brand"><i data-lucide="linkedin" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">LinkedIn</p>
+              <p class="text-xs text-muted truncate">linkedin.com/in/hungbui-dev</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+          <!-- Email -->
+          <a href="mailto:hungbuiqb16@gmail.com" class="group flex items-center gap-4 p-3.5 rounded-2xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/18 transition-all">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-purple/15 border border-purple/25 text-purple"><i data-lucide="mail" class="w-5 h-5"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-sm text-paper">Email</p>
+              <p class="text-xs text-muted truncate">hungbuiqb16@gmail.com</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-muted group-hover:translate-x-1 group-hover:text-paper transition-all"></i>
+          </a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+    <div class="glass rounded-3xl px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-muted">© 2026 Hung Bui. All rights reserved.</p>
+      <p class="text-sm text-muted inline-flex items-center gap-1.5 flex-wrap justify-center">
+        Built with <i data-lucide="heart" class="w-4 h-4 text-red-400 fill-red-400"></i> using
+        <span class="text-paper/80">Next.js</span> ·
+        <span class="text-paper/80">TailwindCSS</span> ·
+      </p>
+      <a href="#home" class="text-sm text-muted hover:text-paper inline-flex items-center gap-1.5 transition-colors">Back to top <i data-lucide="arrow-up" class="w-4 h-4"></i></a>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       SCRIPTS — icons, reveal, parallax, menu, contribution graph
+       ============================================================ -->
+  <script>
+    // Init Lucide icons
+    lucide.createIcons();
+
+    // Mobile menu toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn?.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    mobileMenu?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.add('hidden')));
+
+    // Theme toggle (visual demo — swaps atmosphere intensity)
+    const themeBtn = document.getElementById('themeBtn');
+    let light = false;
+    themeBtn?.addEventListener('click', () => {
+      light = !light;
+      document.documentElement.style.setProperty('--bg', light ? '#0d0d12' : '#09090B');
+      document.querySelector('.bg-atmosphere').style.opacity = light ? '0.75' : '1';
+      themeBtn.innerHTML = '';
+      themeBtn.setAttribute('data-lucide', '');
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', light ? 'sun' : 'moon-star');
+      icon.className = 'w-[18px] h-[18px]';
+      themeBtn.appendChild(icon);
+      lucide.createIcons();
+    });
+
+    // Fade-up reveal on scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          e.target.style.transitionDelay = (Math.min(i, 4) * 60) + 'ms';
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    // Subtle mouse parallax on background blobs
+    const blobs = document.querySelectorAll('[data-parallax]');
+    window.addEventListener('mousemove', (ev) => {
+      const cx = (ev.clientX / window.innerWidth - 0.5);
+      const cy = (ev.clientY / window.innerHeight - 0.5);
+      blobs.forEach(b => {
+        const f = parseFloat(b.dataset.parallax) * 100;
+        b.style.transform = `translate(${cx * f}px, ${cy * f}px)`;
+      });
+    }, { passive: true });
+
+    // Generate a plausible GitHub-style contribution graph (7 rows x 26 cols)
+    const graph = document.getElementById('contribGraph');
+    if (graph) {
+      const levels = ['', 'lvl1', 'lvl2', 'lvl3', 'lvl4'];
+      const total = 7 * 26;
+      let html = '';
+      for (let i = 0; i < total; i++) {
+        // weighted randomness: more empties, occasional bright cells
+        const r = Math.random();
+        let lvl = 0;
+        if (r > 0.55) lvl = 1;
+        if (r > 0.74) lvl = 2;
+        if (r > 0.88) lvl = 3;
+        if (r > 0.96) lvl = 4;
+        html += `<span class="cell ${levels[lvl]}"></span>`;
+      }
+      graph.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
