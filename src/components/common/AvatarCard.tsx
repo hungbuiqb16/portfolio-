@@ -12,12 +12,12 @@ export function AvatarCard() {
         <div className="avatar-glow" style={{ inset: '-20px' }} />
         <ParticleField count={2} />
         <div className="absolute inset-0 grid place-items-center">
-          <div className="relative w-44 h-44">
+          <div className="relative w-44 h-44 group">
             <div className="avatar-ring" />
             <div className="particle p1" />
             <div className="particle p2" />
             <div className="particle p3" />
-            <div className="relative w-44 h-44 rounded-full overflow-hidden border border-white/15 bg-gradient-to-br from-brand/30 to-purple/30">
+            <div className="relative w-44 h-44 rounded-full overflow-hidden border border-white/15 bg-gradient-to-br from-brand/30 to-purple/30 transition-transform duration-300 ease-out group-hover:scale-110">
               <img src="/avt.jpg" alt="Hung Bui" className="w-full h-full object-cover" />
             </div>
           </div>
